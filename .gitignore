@@ -1,0 +1,85 @@
+# Credentials and secrets
+.env
+*.env
+observer.env
+secrets/
+*_key.txt
+*.key
+*.pem
+*.cert
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+*.egg-info/
+
+# Backups
+backups/
+*.bak
+*.bak.*
+*.BAK
+*.BAK2
+*.sha256
+*_backup_*
+
+# Logs
+*.log
+logs/
+
+# Database
+*.sql.bak
+*.dump
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OBSERVER runtime files
+proofs/
+policies_store/
+*.BROKEN
+*.BASELINE
+
+# Internal documents
+HANDOFF_NEXT_CHAT.md
+MASTER_CONTEXT.md
+NORTH_STAR.md
+METRICS.md
+PLAYBOOK.md
+POSTMORTEMS.md
+PROJECT_STATE.md
+NEXT.md
+IMPROVEMENT_*.md
+INCIDENT_KERNEL_STATE_v1.md
+OPERATOR_API_v1.md
+POLICY_ENGINE.md
+POLICY_SCHEMA_v1.md
+POLICY_*.md
+*.md.bak
+agent.log
+.state/
+ssot/
+
+# Observer API specific
+policy.json
+policy_block_*.json
+policies_store/
+observer_backup.sql
+*.sql.bak
+.strategic_bridge_last.json*
+_graveyard/
+.venv/
+exp:
+improvement_dispatcher.sh*
+intent_scheduler.sh*
+SELF_IMPROVEMENT_POLICY.md
+001_brain_exec_log.sql
