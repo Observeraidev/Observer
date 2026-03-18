@@ -1,0 +1,20 @@
+[Unit]
+Description=Observer Brain Worker (LLM policy execution engine)
+After=network.target postgresql.service observer-api.service
+Wants=postgresql.service
+
+[Service]
+EnvironmentFile=/etc/observer/observer.env
+Type=simple
+WorkingDirectory=/root/observer_api
+Environment=PYTHONPATH=/root/observer_api
+ExecStart=/usr/bin/python3 -m app.brain_worker
+User=root
+Group=root
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
