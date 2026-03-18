@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Observer | Action Governance Runtime for AI Agents</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #000000;
+            --bg-card: #0a0a0a;
+            --accent-color: #00ff88;
+            --accent-glow: rgba(0, 255, 136, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --font-main: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --font-display: 'Syne', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Grid Background */
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Sticky Navbar */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+        }
+
+        .nav-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-logo svg {
+            height: 36px;
+            width: auto;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-family: var(--font-mono);
+            transition: color 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-color);
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .hamburger span {
+            width: 25px;
+            height: 2px;
+            background: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 60px;
+                left: 0;
+                right: 0;
+                flex-direction: column;
+                gap: 1rem;
+                background: rgba(0, 0, 0, 0.95);
+                padding: 2rem;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+        }
+
+        section {
+            padding: 6rem 0;
+        }
+
+        h1, h2, h3 {
+            font-family: var(--font-display);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .text-accent {
+            color: var(--accent-color);
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 8rem 0 4rem;
+            position: relative;
+            margin-top: 2rem;
+        }
+
+        .hero-icon {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: center;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .hero-tagline {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+            background: linear-gradient(to bottom, #fff 60%, #888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-description {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 850px;
+            margin: 0 auto 3rem;
+            line-height: 1.8;
+            font-weight: 400;
+        }
+
+        .hero-ctas {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--text-primary);
+            color: var(--bg-color);
+            border: 1px solid var(--text-primary);
+        }
+
+        .btn-primary:hover {
+            background-color: transparent;
+            color: var(--text-primary);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        /* Production Status */
+        .production-badge {
+            display: inline-block;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Metrics Strip */
+        .metrics-strip {
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 2.5rem 0;
+            display: flex;
+            justify-content: center;
+            gap: 4rem;
+            flex-wrap: wrap;
+        }
+
+        .metric-item {
+            text-align: center;
+        }
+
+        .metric-number {
+            font-family: var(--font-mono);
+            color: var(--accent-color);
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-family: var(--font-mono);
+        }
+
+        /* Problem Section */
+        .problem {
+            text-align: center;
+        }
+
+        .problem-title {
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .problem-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .problem-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: left;
+            transition: border-color 0.3s ease;
+        }
+
+        .problem-card:hover {
+            border-color: var(--accent-color);
+        }
+
+        .problem-icon {
+            width: 40px;
+            height: 40px;
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .problem-card h3 {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .problem-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .section-subtitle {
+            color: var(--text-secondary);
+            max-width: 750px;
+            margin: 0 auto 3rem;
+            text-align: center;
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+
+        /* How it Works */
+        .how-it-works {
+            overflow-x: auto;
+        }
+
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            padding: 2rem 0;
+            min-width: 900px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: var(--border-color);
+            z-index: 0;
+        }
+
+        .timeline-step {
+            position: relative;
+            z-index: 1;
+            background: var(--bg-color);
+            padding: 1rem;
+            width: 150px;
+            text-align: center;
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            background: var(--bg-card);
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .step-text {
+            font-size: 0.85rem;
+            font-family: var(--font-mono);
+        }
+
+        /* Features */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 2.5rem;
+            border-radius: 12px;
+            transition: border-color 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: var(--accent-color);
+        }
+
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-card h3 {
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Use Cases */
+        .use-cases-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .use-case-item {
+            background: #050505;
+            border-left: 4px solid var(--accent-color);
+            padding: 2rem;
+            border-radius: 0 8px 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .use-case-item:hover {
+            background: #0a0a0a;
+        }
+
+        .use-case-scenario {
+            font-family: var(--font-mono);
+            flex: 1;
+            font-size: 0.95rem;
+        }
+
+        .use-case-result {
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--accent-color);
+            padding: 0.75rem 1.25rem;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        /* Competitive Positioning */
+        .comparison-section {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.05) 0%, transparent 100%);
+            padding: 3rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-top: 3rem;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .competitor-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .competitor-name {
+            font-family: var(--font-mono);
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .feature-check {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        .check-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+        }
+
+        .check-mark {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .cross-mark {
+            color: #ff4444;
+            opacity: 0.5;
+        }
+
+        /* Tech Stack */
+        .tech-stack {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 3rem;
+        }
+
+        .tech-stack h3 {
+            margin-bottom: 1.5rem;
+        }
+
+        .tech-items {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+        }
+
+        .tech-item {
+            color: var(--accent-color);
+        }
+
+        /* Open Source */
+        .os-card {
+            background: linear-gradient(135deg, #0a0a0a 0%, #111 100%);
+            border: 1px solid var(--border-color);
+            padding: 3rem;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .license-info {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            margin-top: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--border-color);
+            padding: 4rem 0;
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-col h3 {
+            color: var(--accent-color);
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            font-family: var(--font-mono);
+            font-weight: 600;
+        }
+
+        .footer-col ul {
+            list-style: none;
+        }
+
+        .footer-col ul li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-col a {
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .footer-col a:hover {
+            color: var(--accent-color);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+            padding-top: 2rem;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-tagline { font-size: 2.5rem; }
+            .hero-ctas { flex-direction: column; }
+            .timeline { flex-direction: column; min-width: auto; gap: 2rem; }
+            .timeline::before { display: none; }
+            .timeline-step { width: 100%; text-align: left; display: flex; align-items: center; gap: 1rem; padding: 0; }
+            .step-number { margin: 0; }
+            .use-case-item { flex-direction: column; align-items: flex-start; gap: 1rem; }
+            .section-title { font-size: 1.8rem; }
+            .metrics-strip { gap: 2rem; }
+            .problem-cards { grid-template-columns: 1fr; }
+            .footer-content { grid-template-columns: 1fr; gap: 2rem; }
+            .comparison-grid { grid-template-columns: 1fr; }
+            .tech-items { flex-direction: column; gap: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+
+    <!-- Sticky Navbar -->
+    <nav>
+        <div class="nav-container">
+            <a href="#" class="nav-logo"><svg width="160" height="36" viewBox="0 0 160 36" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="ec2"><ellipse cx="18" cy="18" rx="12" ry="8"/></clipPath><style>.sc2{animation:sM2 2.6s ease-in-out infinite}.ir2{animation:gP2 2.6s ease-in-out infinite}@keyframes sM2{0%{transform:translateY(-8px);opacity:0}15%{opacity:1}85%{opacity:1}100%{transform:translateY(8px);opacity:0}}@keyframes gP2{0%,100%{opacity:.25}50%{opacity:.8}}</style></defs><path d="M18 2L3 7V17C3 25 10 31 18 34C26 31 33 25 33 17V7L18 2Z" fill="rgba(0,255,136,.04)"/><path d="M18 2L3 7V17C3 25 10 31 18 34C26 31 33 25 33 17V7L18 2Z" stroke="#00ff88" stroke-width="1.2" stroke-linejoin="round" fill="none"/><path d="M8 18 Q18 11 28 18" stroke="#00ff88" stroke-width="1.2" fill="none" stroke-linecap="round"/><path d="M8 18 Q18 25 28 18" stroke="#00ff88" stroke-width="1.2" fill="none" stroke-linecap="round"/><path d="M8 18 Q5 22 6 26 Q7 29 9.5 28" stroke="#00ff88" stroke-width="0.9" fill="none" stroke-linecap="round"/><path d="M28 18 Q31 22 29.5 25 Q28 28 26 26.5 Q24.5 25.5 25.5 24 Q26.5 23 28 24" stroke="#00ff88" stroke-width="0.8" fill="none" stroke-linecap="round"/><circle cx="18" cy="18" r="4.5" stroke="#00ff88" stroke-width="0.8" fill="rgba(0,255,136,.07)" class="ir2"/><circle cx="18" cy="18" r="2" fill="#00ff88"/><circle cx="19" cy="17" r=".7" fill="white" opacity=".75"/><g clip-path="url(#ec2)"><line class="sc2" x1="18" y1="11" x2="18" y2="25" stroke="#00ff88" stroke-width="1.4" stroke-linecap="round" opacity=".85"/></g><text x="42" y="24" font-family="Syne,sans-serif" font-weight="800" font-size="18" letter-spacing="-0.5" fill="white">obs<tspan fill="#00ff88">erver</tspan></text></svg></a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#how-it-works">How it works</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#use-cases">Use Cases</a></li>
+                <li><a href="https://github.com/Observeraidev/Observer" target="_blank">GitHub</a></li>
+            </ul>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="production-badge">✓ Production Deployed</div>
+            <div class="hero-icon">
+                <svg width="100" height="112" viewBox="0 0 56 62" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="ec"><ellipse cx="28" cy="30" rx="16" ry="10"/></clipPath><style>.sc{animation:sM 2.6s ease-in-out infinite}.ir{animation:gP 2.6s ease-in-out infinite}@keyframes sM{0%{transform:translateY(-10px);opacity:0}15%{opacity:1}85%{opacity:1}100%{transform:translateY(10px);opacity:0}}@keyframes gP{0%,100%{opacity:.25}50%{opacity:.8}}</style></defs><path d="M28 3L5 12V30C5 43 15 53 28 58C41 53 51 43 51 30V12L28 3Z" fill="rgba(0,255,136,.04)"/><path d="M28 3L5 12V30C5 43 15 53 28 58C41 53 51 43 51 30V12L28 3Z" stroke="#00ff88" stroke-width="1.4" stroke-linejoin="round" fill="none"/><path d="M28 6.5L7.5 14.5V30C7.5 41.5 16.5 50.5 28 55C39.5 50.5 48.5 41.5 48.5 30V14.5L28 6.5Z" stroke="rgba(0,255,136,.12)" stroke-width="0.6" stroke-linejoin="round" fill="none"/><path d="M12 30 Q28 18.5 44 30" stroke="#00ff88" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M12 30 Q28 39.5 44 30" stroke="#00ff88" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M12 30 Q7.5 35 8.5 40 Q9.5 44.5 13 42" stroke="#00ff88" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M44 30 Q48.5 35 46.5 38.5 Q44.5 42 41.5 40 Q39.5 38.5 41 36.5 Q42.5 35 44 36" stroke="#00ff88" stroke-width="1" fill="none" stroke-linecap="round"/><circle cx="28" cy="30" r="8" stroke="#00ff88" stroke-width="0.5" fill="rgba(0,255,136,.04)" class="ir"/><circle cx="28" cy="30" r="5.5" stroke="#00ff88" stroke-width="1" fill="rgba(0,255,136,.07)" class="ir"/><circle cx="28" cy="30" r="2.8" fill="#00ff88"/><circle cx="29.3" cy="28.7" r=".9" fill="white" opacity=".75"/><g clip-path="url(#ec)"><line class="sc" x1="28" y1="20" x2="28" y2="40" stroke="#00ff88" stroke-width="1.8" stroke-linecap="round" opacity=".85"/></g></svg>
+            </div>
+            <h1 class="hero-tagline">Before your agent acts, <span class="text-accent">Observer decides.</span></h1>
+            <p class="hero-description">
+                Action governance runtime for autonomous AI agents. Real-time policy enforcement, pre-execution simulation, reputation scoring, and complete auditability. The control layer every production AI deployment needs.
+            </p>
+            <div class="hero-ctas">
+                <a href="#how-it-works" class="btn btn-secondary">Read the Docs</a>
+                <a href="https://github.com/Observeraidev/Observer" class="btn btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+                    GitHub
+                </a>
+            </div>
+        </section>
+
+        <!-- Metrics Strip -->
+        <div class="metrics-strip">
+            <div class="metric-item">
+                <div class="metric-number">8</div>
+                <div class="metric-label">Running processes</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-number">16</div>
+                <div class="metric-label">Automated timers</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-number">3</div>
+                <div class="metric-label">Agents governed</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-number">6</div>
+                <div class="metric-label">Intents catalogued</div>
+            </div>
+        </div>
+
+        <!-- Problem Section -->
+        <section id="problem">
+            <h2 class="problem-title">The Real Problem</h2>
+            <div class="problem-cards">
+                <div class="problem-card">
+                    <svg class="problem-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <h3>Uncontrolled Execution</h3>
+                    <p>Agents delete, deploy, and modify without permission. One misconfigured agent breaks production. No governance = no safety.</p>
+                </div>
+                <div class="problem-card">
+                    <svg class="problem-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    <h3>Zero Traceability</h3>
+                    <p>Without a decision log, debugging is impossible. Compliance audits fail. Regulators demand action history — you have none.</p>
+                </div>
+                <div class="problem-card">
+                    <svg class="problem-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20m10-10H2"></path></svg>
+                    <h3>Compliance Risk</h3>
+                    <p>AI regulations require action auditing and governance. Without it, you're exposed. Observer is your compliance foundation.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- How it Works -->
+        <section id="how-it-works">
+            <h2 class="section-title">How it Works</h2>
+            <p class="section-subtitle">Observer intercepts every agent action and makes a governance decision in milliseconds.</p>
+            <div class="how-it-works">
+                <div class="timeline">
+                    <div class="timeline-step">
+                        <div class="step-number">1</div>
+                        <div class="step-text">Agent sends intent</div>
+                    </div>
+                    <div class="timeline-step">
+                        <div class="step-number">2</div>
+                        <div class="step-text">Policy evaluated</div>
+                    </div>
+                    <div class="timeline-step">
+                        <div class="step-number">3</div>
+                        <div class="step-text">Impact simulated</div>
+                    </div>
+                    <div class="timeline-step">
+                        <div class="step-number">4</div>
+                        <div class="step-text">Reputation checked</div>
+                    </div>
+                    <div class="timeline-step">
+                        <div class="step-number">5</div>
+                        <div class="step-text">Decision made</div>
+                    </div>
+                    <div class="timeline-step">
+                        <div class="step-number">6</div>
+                        <div class="step-text">Logged & audited</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section id="features">
+            <h2 class="section-title">Core Capabilities</h2>
+            <p class="section-subtitle">Six pillars of action governance that set Observer apart.</p>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                    <h3>Intent Catalog</h3>
+                    <p>Define exactly what actions agents can request. Nothing outside the catalog executes. Whitelist-based security.</p>
+                </div>
+                <div class="feature-card">
+                    <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    <h3>Policy Engine</h3>
+                    <p>Configurable rules that approve, block, or escalate actions to human review. Real-time enforcement.</p>
+                </div>
+                <div class="feature-card">
+                    <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    <h3>Action Memory</h3>
+                    <p>Live registry with historical metrics per action. The system learns from every decision and execution.</p>
+                </div>
+                <div class="feature-card">
+                    <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    <h3>Reputation Layer</h3>
+                    <p>Trust score per agent based on behavior history. High-reputation agents get faster approvals. New agents escalate to humans.</p>
+                </div>
+                <div class="feature-card">
+                    <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>
+                    <h3>Pre-Execution Simulation</h3>
+                    <p>Simulate action impact before approval. No surprises. See consequences before they happen.</p>
+                </div>
+                <div class="feature-card">
+                    <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                    <h3>Evidence-Adaptive Policy</h3>
+                    <p>Policy hardens automatically when evidence history justifies it. Self-improving governance.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Use Cases -->
+        <section id="use-cases">
+            <h2 class="section-title">Real-World Scenarios</h2>
+            <p class="section-subtitle">How Observer prevents chaos in production.</p>
+            <div class="use-cases-list">
+                <div class="use-case-item">
+                    <div class="use-case-scenario">Agent attempts to delete production database files</div>
+                    <div class="use-case-result" style="color: #ff4444; background: rgba(255, 68, 68, 0.1);">Blocked by Policy</div>
+                </div>
+                <div class="use-case-item">
+                    <div class="use-case-scenario">New agent with zero history requests a critical deployment</div>
+                    <div class="use-case-result" style="color: #ffbb33; background: rgba(255, 187, 51, 0.1);">Escalated to Human</div>
+                </div>
+                <div class="use-case-item">
+                    <div class="use-case-scenario">High-reputation agent executes routine, pre-approved task</div>
+                    <div class="use-case-result">Auto-Approved in 50ms</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Competitive Positioning -->
+        <section id="comparison">
+            <h2 class="section-title">Why Observer Wins</h2>
+            <p class="section-subtitle">The only platform with real-time action governance + pre-execution simulation + reputation scoring.</p>
+            <div class="comparison-section">
+                <div class="comparison-grid">
+                    <div class="competitor-card">
+                        <div class="competitor-name">Observer</div>
+                        <div class="feature-check">
+                            <div class="check-item"><span class="check-mark">✓</span> Real-time action governance</div>
+                            <div class="check-item"><span class="check-mark">✓</span> Pre-execution simulation</div>
+                            <div class="check-item"><span class="check-mark">✓</span> Reputation scoring</div>
+                            <div class="check-item"><span class="check-mark">✓</span> Evidence-adaptive policy</div>
+                            <div class="check-item"><span class="check-mark">✓</span> Open source (BSL 1.1)</div>
+                        </div>
+                    </div>
+                    <div class="competitor-card">
+                        <div class="competitor-name">MS Agent Toolkit</div>
+                        <div class="feature-check">
+                            <div class="check-item"><span class="cross-mark">✗</span> Real-time action governance</div>
+                            <div class="check-item"><span class="cross-mark">✗</span> Pre-execution simulation</div>
+                            <div class="check-item"><span class="cross-mark">✗</span> Reputation scoring</div>
+                            <div class="check-item"><span class="cross-mark">✗</span> Evidence-adaptive policy</div>
+                            <div class="check-item"><span class="cross-mark">✗</span> Open source</div>
+                        </div>
+                    </div>
+                    <div class="competitor-card">
+                        <div class="competitor-name">AgentGuard</div>
+                        <div class="feature-check">
+                            <div class="check-item"><span class="cross-mark">◐</span> Real-time action governance</div>
+                            <div class="check-item"><span class="cross-mark">✗</span> Pre-execution simulation</div>
+                            <div class="check-item"><span class="cross-mark">✗</span> Reputation scoring</div>
+                            <div class="check-item"><span class="cross-mark">✗</span> Evidence-adaptive policy</div>
+                            <div class="check-item"><span class="cross-mark">✗</span> Open source</div>
+                        </div>
+                    </div>
+                    <div class="competitor-card">
+                        <div class="competitor-name">Credo AI</div>
+                        <div class="feature-check">
+                            <div class="check-item"><span class="cross-mark">✗</span> Real-time action governance</div>
+                            <div class="check-item"><span class="cross-mark">✗</span> Pre-execution simulation</div>
+                            <div class="check-item"><span class="cross-mark">✗</span> Reputation scoring</div>
+                            <div class="check-item"><span class="cross-mark">✗</span> Evidence-adaptive policy</div>
+                            <div class="check-item"><span class="cross-mark">✗</span> Open source</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tech Stack -->
+        <div class="tech-stack">
+            <h3>Production Stack</h3>
+            <div class="tech-items">
+                <div class="tech-item">Python / FastAPI</div>
+                <div class="tech-item">PostgreSQL</div>
+                <div class="tech-item">systemd timers</div>
+                <div class="tech-item">Linux Ubuntu</div>
+                <div class="tech-item">REST API (8088 / 8090)</div>
+            </div>
+        </div>
+
+        <!-- Open Source -->
+        <section id="open-source">
+            <div class="os-card">
+                <h2 class="section-title">Open Source</h2>
+                <p style="margin-top: 1.5rem; margin-bottom: 1rem; color: var(--text-secondary); font-size: 1rem;">
+                    Business Source License 1.1 — Free for non-commercial use.
+                </p>
+                <div class="license-info">
+                    Converts to Apache 2.0 in 2029<br>
+                    Commercial licensing available
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-col">
+                    <h3>observer</h3>
+                    <p style="margin-bottom: 1rem; color: var(--text-primary);">Action Governance for AI Agents</p>
+                    <p style="font-size: 0.8rem; opacity: 0.7;">BSL 1.1 → Apache 2.0 (2029)</p>
+                </div>
+                <div class="footer-col">
+                    <h3>Navigation</h3>
+                    <ul>
+                        <li><a href="#how-it-works">How it works</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#use-cases">Use Cases</a></li>
+                        <li><a href="#comparison">Competitive Positioning</a></li>
+                        <li><a href="#open-source">Open Source</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h3>Creator</h3>
+                    <p style="color: var(--text-primary);">Newman Nolberto Noriega Fermin</p>
+                    <p style="margin-top: 1rem;"><a href="https://github.com/Observeraidev" target="_blank">github.com/Observeraidev</a></p>
+                    <p style="margin-top: 0.5rem;"><a href="https://observersai.com" target="_blank">observersai.com</a></p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Observer Project. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile hamburger menu
+        const hamburger = document.getElementById('hamburger');
+        const navLinks = document.getElementById('navLinks');
+
+        hamburger.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+
+        // Close menu when link is clicked
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+            });
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                if (href !== '#') {
+                    e.preventDefault();
+                    const target = document.querySelector(href);
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
+            });
+        });
+
+        // Simple reveal animation on scroll
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = "1";
+                    entry.target.style.transform = "translateY(0)";
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('section').forEach(section => {
+            section.style.opacity = "0";
+            section.style.transform = "translateY(20px)";
+            section.style.transition = "all 0.6s ease-out";
+            observer.observe(section);
+        });
+    </script>
+</body>
+</html>
